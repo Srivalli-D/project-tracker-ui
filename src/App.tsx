@@ -48,6 +48,7 @@ export default function App() {
     })),
   );
   const syncingFromPopState = useRef(false);
+  const presenceCursorRef = useRef(0);
 
   useEffect(() => {
     const queryState = readQueryState();
@@ -419,7 +420,7 @@ function KanbanView({
               ) : (
                 columnTasks.map((task) =>
                   drag?.taskId === task.id && drag.sourceStatus === status ? (
-                    <div key={task.id} className={styles.placeholder} />
+                    <div key={task.id} className={styles.placeholder} style={{ height: drag?.originRect.height ?? 136 }} />
                   ) : (
                     <article
                       key={task.id}
@@ -697,7 +698,7 @@ function PresenceStack({ users }: { users: PresenceUser[] }) {
     <div className={styles.presenceStack}>
       {visible.map((user) => (
         <span
-          key={user.id}
+          key={`${user.id}-${user.taskId}`}
           className={styles.presenceAvatar}
           style={{ background: user.color }}
           title={`${user.name} is ${user.mode}`}
@@ -832,6 +833,7 @@ function clampDay(date: Date, monthStart: Date, monthEnd: Date) {
   if (date > monthEnd) return monthEnd.getDate();
   return date.getDate();
 }
+
 
 
 
