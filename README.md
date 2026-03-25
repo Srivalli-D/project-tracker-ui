@@ -59,6 +59,4 @@ Task generation lives in `src/data/generateTasks.ts` and creates 640 tasks acros
 
 The hardest UI problem here was making drag-and-drop feel stable while the board still behaved like a normal layout. The key issue was preserving the original card position without causing the entire column to collapse or reflow while the user dragged. I solved that by splitting the interaction into two layers: the source column keeps a placeholder block with the same approximate dimensions as the dragged card, and a separate fixed-position overlay follows the pointer. That let the column keep its spatial rhythm while the user got direct visual feedback from the floating card. For invalid drops, I reused the original card rectangle captured at drag start and animated the overlay back to that exact location, which gave the snap-back effect without mutating task state. With more time, I would refactor the collaboration indicators into a dedicated animation layer so avatar movement between tasks could use a true FLIP-style transition instead of simple entry and exit animation on each card.
 
-## Lighthouse
-
-The codebase is structured to target a strong desktop Lighthouse score, but I did not generate a screenshot inside this environment. Please run Lighthouse locally against the production build and add the screenshot to the repository before submission.
+## Lighthouse`r`n`r`n### Score`r`n![Lighthouse Score](./lighthouse-score.png)`r`n`r`n### Metrics`r`n![Lighthouse Metrics](./lighthouse-metrics.png)`r`n
