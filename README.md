@@ -1,5 +1,8 @@
-<<<<<<< HEAD
 # Project Tracker UI
+
+## Live Demo
+
+[Open the deployed app](https://project-tracker-bfc9qozfd-dasari-srivallis-projects.vercel.app)
 
 Multi-view React + TypeScript frontend for the Velozity Global Solutions technical assessment. The app renders one shared task dataset in Kanban, list, and timeline views, supports custom drag-and-drop, uses hand-built virtual scrolling in the list, simulates live collaboration, and keeps filter state in the URL.
 
@@ -50,7 +53,7 @@ Every filter change pushes a new URL, and `popstate` rehydrates the reducer so b
 
 ## Seed Data
 
-Task generation lives in [src/data/generateTasks.ts](/c:/Users/sriva/OneDrive/Attachments/Desktop/project_tracker_ui/src/data/generateTasks.ts) and creates 640 tasks across multiple statuses, priorities, assignees, overdue dates, and missing start dates.
+Task generation lives in `src/data/generateTasks.ts` and creates 640 tasks across multiple statuses, priorities, assignees, overdue dates, and missing start dates.
 
 ## Explanation Field
 
@@ -59,6 +62,3 @@ The hardest UI problem here was making drag-and-drop feel stable while the board
 ## Lighthouse
 
 The codebase is structured to target a strong desktop Lighthouse score, but I did not generate a screenshot inside this environment. Please run Lighthouse locally against the production build and add the screenshot to the repository before submission.
-=======
-
->>>>>>> 70ee6364b4e9fb86e4d516f3d2c2d95915db9920
