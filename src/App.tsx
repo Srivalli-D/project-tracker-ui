@@ -27,6 +27,7 @@ interface DragState {
   taskId: string;
   sourceStatus: TaskStatus;
   hoverStatus: TaskStatus | null;
+  hoverIndex: number | null;
   originRect: DOMRect;
   pointerOffsetX: number;
   pointerOffsetY: number;
@@ -170,7 +171,7 @@ export default function App() {
 
       <main className={styles.panel}>
         {state.view === "kanban" ? (
-          <KanbanView tasks={filteredTasks} presence={presence} onStatusChange={(taskId, status) => dispatch({ type: "UPDATE_TASK_STATUS", taskId, status })} />
+          <KanbanView tasks={filteredTasks} presence={presence} onStatusChange={(taskId, status, targetIndex) => dispatch({ type: "UPDATE_TASK_STATUS", taskId, status, targetIndex })} />
         ) : null}
         {state.view === "list" ? (
           <ListView
@@ -179,7 +180,7 @@ export default function App() {
             sort={state.sort}
             hasActiveFilters={hasActiveFilters}
             onSort={(key) => dispatch({ type: "SET_SORT", key })}
-            onStatusChange={(taskId, status) => dispatch({ type: "UPDATE_TASK_STATUS", taskId, status })}
+            onStatusChange={(taskId, status, targetIndex) => dispatch({ type: "UPDATE_TASK_STATUS", taskId, status, targetIndex })}
             onClearFilters={() => dispatch({ type: "CLEAR_FILTERS" })}
           />
         ) : null}
@@ -308,7 +309,7 @@ function KanbanView({
 }: {
   tasks: Task[];
   presence: PresenceUser[];
-  onStatusChange: (taskId: string, status: TaskStatus) => void;
+  onStatusChange: (taskId: string, status: TaskStatus, targetIndex?: number) => void;
 }) {
   const [drag, setDrag] = useState<DragState | null>(null);
   const columnsRef = useRef<Record<TaskStatus, HTMLDivElement | null>>({
@@ -331,6 +332,19 @@ function KanbanView({
         x: event.clientX,
         y: event.clientY,
         hoverStatus: (hovered?.[0] as TaskStatus | undefined) ?? null,
+        hoverIndex: (() => {
+          if (!hovered?.[1]) return null;
+          const cards = Array.from(hovered[1].querySelectorAll(`.${styles.card}`)) as HTMLElement[];
+          let index = cards.length;
+          for (let i = 0; i < cards.length; i += 1) {
+            const rect = cards[i].getBoundingClientRect();
+            if (event.clientY < rect.top + rect.height / 2) {
+              index = i;
+              break;
+            }
+          }
+          return index;
+        })(),
       };
     });
   };
@@ -345,9 +359,7 @@ function KanbanView({
       if (!current) return current;
       clearListeners();
       if (current.hoverStatus) {
-        if (current.hoverStatus !== current.sourceStatus) {
-          onStatusChange(current.taskId, current.hoverStatus);
-        }
+        onStatusChange(current.taskId, current.hoverStatus, current.hoverIndex ?? undefined);
         return null;
       }
 
@@ -367,6 +379,7 @@ function KanbanView({
       taskId: task.id,
       sourceStatus: task.status,
       hoverStatus: task.status,
+      hoverIndex: null,
       originRect: rect,
       pointerOffsetX: event.clientX - rect.left,
       pointerOffsetY: event.clientY - rect.top,
@@ -483,7 +496,7 @@ function ListView({
   sort: SortState;
   hasActiveFilters: boolean;
   onSort: (key: SortState["key"]) => void;
-  onStatusChange: (taskId: string, status: TaskStatus) => void;
+  onStatusChange: (taskId: string, status: TaskStatus, targetIndex?: number) => void;
   onClearFilters: () => void;
 }) {
   const [scrollTop, setScrollTop] = useState(0);
@@ -819,3 +832,8 @@ function clampDay(date: Date, monthStart: Date, monthEnd: Date) {
   if (date > monthEnd) return monthEnd.getDate();
   return date.getDate();
 }
+
+
+
+
+

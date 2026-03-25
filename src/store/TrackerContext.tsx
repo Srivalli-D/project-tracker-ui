@@ -6,7 +6,7 @@ import {
   type Dispatch,
   type PropsWithChildren,
 } from "react";
-import { ASSIGNEES, generateTasks } from "../data/generateTasks";
+import { ASSIGNEES, generateTasks, STATUSES } from "../data/generateTasks";
 import type { Filters, SortState, Task, ViewMode } from "../types";
 
 interface TrackerState {
@@ -23,7 +23,12 @@ type TrackerAction =
   | { type: "SET_DATE_FILTER"; key: "dueFrom" | "dueTo"; value: string }
   | { type: "CLEAR_FILTERS" }
   | { type: "HYDRATE_FROM_URL"; filters: Filters; view: ViewMode }
-  | { type: "UPDATE_TASK_STATUS"; taskId: string; status: Task["status"] };
+  | {
+      type: "UPDATE_TASK_STATUS";
+      taskId: string;
+      status: Task["status"];
+      targetIndex?: number;
+    };
 
 const defaultFilters: Filters = {
   statuses: [],
@@ -66,18 +71,43 @@ function reducer(state: TrackerState, action: TrackerAction): TrackerState {
     case "HYDRATE_FROM_URL":
       return { ...state, filters: action.filters, view: action.view };
     case "UPDATE_TASK_STATUS": {
-      const maxOrder = Math.max(...state.tasks.map((task) => task.order));
+      const movingTask = state.tasks.find((task) => task.id === action.taskId);
+      if (!movingTask) return state;
+
+      const grouped = new Map<Task["status"], Task[]>();
+      for (const status of STATUSES) {
+        grouped.set(status, []);
+      }
+
+      for (const task of state.tasks) {
+        if (task.id === action.taskId) continue;
+        const list = grouped.get(task.status);
+        if (list) {
+          list.push(task);
+        } else {
+          grouped.set(task.status, [task]);
+        }
+      }
+
+      const destination = [...(grouped.get(action.status) ?? [])].sort((a, b) => a.order - b.order);
+      const clampedIndex =
+        action.targetIndex === undefined
+          ? destination.length
+          : Math.max(0, Math.min(action.targetIndex, destination.length));
+
+      destination.splice(clampedIndex, 0, { ...movingTask, status: action.status });
+      grouped.set(action.status, destination);
+
+      const rebuilt: Task[] = [];
+      let order = 0;
+      for (const status of STATUSES) {
+        const list = (grouped.get(status) ?? []).map((task) => ({ ...task, order: order++ }));
+        rebuilt.push(...list);
+      }
+
       return {
         ...state,
-        tasks: state.tasks.map((task) =>
-          task.id === action.taskId
-            ? {
-                ...task,
-                status: action.status,
-                order: task.status === action.status ? task.order : maxOrder + 1,
-              }
-            : task,
-        ),
+        tasks: rebuilt,
       };
     }
     default:
